@@ -1,0 +1,4 @@
+metadata_filter
+mpris2
+pylast
+pyxdg
