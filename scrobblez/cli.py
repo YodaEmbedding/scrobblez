@@ -17,6 +17,8 @@ CONFIG_ROOT = os.path.join(xdg_config_home, "scrobblez")
 SECRET_PATH = os.path.join(CONFIG_ROOT, "secret.json")
 URI_POLL_INTERVAL = 1
 
+os.makedirs(CONFIG_ROOT, exist_ok=True)
+
 MetadataFixer = Callable[[Metadata], Metadata]
 
 
@@ -29,10 +31,7 @@ def get_args():
 def cli_run(fix_metadata: MetadataFixer, whitelist: List[str]):
     args = get_args()
 
-    with open(SECRET_PATH) as f:
-        secret_config = json.load(f)
-
-    network = pylast.LastFMNetwork(**secret_config)
+    network = _get_lastfm_network()
     scrobbler = LastFMScrobbler(network, cache_only=args.cache_only)
 
     while True:
@@ -53,6 +52,39 @@ def _run_loop(
     print(f"Listening to player {uri}\n")
     scrobble_loop = Looper(player, scrobbler, fix_metadata)
     scrobble_loop.run()
+
+
+def _get_lastfm_network() -> pylast.LastFMNetwork:
+    try:
+        with open(SECRET_PATH) as f:
+            secret = json.load(f)
+    except FileNotFoundError:
+        api_key_url = "https://www.last.fm/api/account/create"
+        print(
+            f"Please visit the following link to obtain credentials:\n"
+            f"{api_key_url}\n\n"
+            f"These credentials and an MD5 hash of your password will be "
+            f"stored within:\n"
+            f"{SECRET_PATH}\n"
+        )
+
+        prefix = "Please enter your"
+        prompts = {
+            "api_key": "API key",
+            "api_secret": "API secret",
+            "username": "username",
+            "password": "password",
+        }
+        secret = {k: input(f"{prefix} {v}: ") for k, v in prompts.items()}
+        secret["password_hash"] = pylast.md5(secret["password"])
+        del secret["password"]
+        print("")
+
+        with open(SECRET_PATH, "w") as f:
+            json.dump(secret, f, indent=4)
+            f.write("\n")
+
+    return pylast.LastFMNetwork(**secret)
 
 
 def _get_valid_player_uri(whitelist: List[str]) -> str:
