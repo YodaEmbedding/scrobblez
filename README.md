@@ -26,26 +26,16 @@ pip install .
 
 ## Usage
 
-After configuring the player (see below), you can run by:
+Simply run the following command:
 
 ```bash
 scrobblez
 ```
 
-Within `~/.config/scrobblez/secret.json`, specify [Last.fm API
-credentials](https://www.last.fm/api/account/create), username, and password
-hash (MD5):
+## Configuration
 
-```json
-{
-    "api_key": "...",
-    "api_secret": "...",
-    "username": "...",
-    "password_hash": "..."
-}
-```
-
-Within `~/.config/scrobblez/config.py`, specify a whitelist of valid player names:
+Within `~/.config/scrobblez/config.py`, you may specify a whitelist of valid
+player names:
 
 ```python
 whitelist = ["spotify"]

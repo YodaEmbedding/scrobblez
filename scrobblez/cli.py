@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from itertools import count
 from time import sleep
 from typing import Callable, List, Optional
 
@@ -14,8 +15,11 @@ from scrobblez.scrobblers import LastFMScrobbler, Scrobbler
 from scrobblez.types import Metadata
 
 CONFIG_ROOT = os.path.join(xdg_config_home, "scrobblez")
+CONFIG_PATH = os.path.join(CONFIG_ROOT, "config.py")
 SECRET_PATH = os.path.join(CONFIG_ROOT, "secret.json")
 URI_POLL_INTERVAL = 1
+URI_PREFIX = "org.mpris.MediaPlayer2."
+
 
 os.makedirs(CONFIG_ROOT, exist_ok=True)
 
@@ -30,6 +34,9 @@ def get_args():
 
 def cli_run(fix_metadata: MetadataFixer, whitelist: List[str]):
     args = get_args()
+
+    if whitelist == []:
+        whitelist = _configure_whitelist()
 
     network = _get_lastfm_network()
     scrobbler = LastFMScrobbler(network, cache_only=args.cache_only)
@@ -87,6 +94,29 @@ def _get_lastfm_network() -> pylast.LastFMNetwork:
     return pylast.LastFMNetwork(**secret)
 
 
+def _configure_whitelist() -> List[str]:
+    names = [_removeprefix(uri, URI_PREFIX) for uri in get_players_uri()]
+    available = "\n".join(f"{i}. {x}" for i, x in enumerate(names, start=1))
+    print(f"Currently available players:\n{available}\n")
+    print("Please provide a whitelist of valid players:")
+    whitelist = []
+
+    for i in count(start=1):
+        entry = input(f"{i}. ")
+        if entry == "":
+            break
+        whitelist.append(entry)
+
+    print("")
+
+    if whitelist != []:
+        with open(CONFIG_PATH, "a") as f:
+            f.write(f"\nwhitelist = {json.dumps(whitelist, indent=4)}\n")
+        print(f"Configuration saved to:\n{CONFIG_PATH}\n")
+
+    return whitelist
+
+
 def _get_valid_player_uri(whitelist: List[str]) -> str:
     while True:
         uri = _get_player_uri(whitelist)
@@ -96,10 +126,8 @@ def _get_valid_player_uri(whitelist: List[str]) -> str:
 
 
 def _get_player_uri(whitelist: List[str]) -> Optional[str]:
-    prefix = "org.mpris.MediaPlayer2."
-
     for uri in get_players_uri():
-        name = _removeprefix(uri, prefix)
+        name = _removeprefix(uri, URI_PREFIX)
         if any(_matches_rule(r, name) for r in whitelist):
             return uri
 
