@@ -8,7 +8,7 @@ with open(path.join(root, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="scrobblez",
-    version="0.0.0",
+    version="0.1.0",
     description="Scrobbler for MPRIS 2 compatible clients",
     url="https://github.com/YodaEmbedding/scrobblez",
     author="Mateen Ulhaq",
