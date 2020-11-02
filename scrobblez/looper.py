@@ -78,6 +78,10 @@ class Looper:
         self._send_scrobble(timestamp=int(timestamp_now() - offset))
 
     def _send_now_playing(self):
+        fmt_metadata = "\n".join(
+            f"  {k}: {v}" for k, v in self._metadata.items()
+        )
+        print(f"Now playing (unfixed metadata, debug info):\n{fmt_metadata}\n")
         info = to_now_playing(self._fix_metadata(self._metadata))
         self.scrobbler.update_now_playing(info)
         self._can_now_play = False
