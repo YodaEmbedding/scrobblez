@@ -4,6 +4,7 @@ from math import isclose
 from time import sleep, time
 from typing import Callable, Dict, Tuple
 
+import dbus
 from mpris2 import Player
 
 from scrobblez.scrobblers import Scrobbler
@@ -32,12 +33,16 @@ class Looper:
     def run(self):
         self.scrobbler.flush_scrobble_cache()
 
-        while True:
-            loop_start = time()
-            self._run_step()
-            sleep(max(0, POLL_INTERVAL - (time() - loop_start)))
-            if self._is_playing:
-                self._elapsed += time() - loop_start
+        try:
+            while True:
+                loop_start = time()
+                self._run_step()
+                sleep(max(0, POLL_INTERVAL - (time() - loop_start)))
+                if self._is_playing:
+                    self._elapsed += time() - loop_start
+        except dbus.exceptions.DBusException as e:
+            self._try_scrobble(offset=self._elapsed)
+            raise e
 
     def _run_step(self):
         metadata = clean_player_metadata(self.player.Metadata)
