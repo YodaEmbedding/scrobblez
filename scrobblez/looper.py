@@ -11,7 +11,7 @@ from scrobblez.scrobblers import Scrobbler
 from scrobblez.types import Metadata, NowPlayingInfo, Scrobble
 
 POLL_INTERVAL = 1
-REL_TOL = 0.25
+REL_TOL = 0.50
 ABS_TOL = POLL_INTERVAL * 2
 
 
