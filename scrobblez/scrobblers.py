@@ -43,7 +43,10 @@ class LastFMScrobbler(Scrobbler):
 
     def update_now_playing(self, info: NowPlayingInfo):
         log("Now playing", fmt_dict(info))
-        self.network.update_now_playing(**info)
+        try:
+            self.network.update_now_playing(**info)
+        except Exception as e:
+            log("Exception when sending now playing", f"{type(e)}({e})")
 
     def flush_scrobble_cache(self):
         """Send scrobbles over network."""
