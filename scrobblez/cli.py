@@ -35,7 +35,7 @@ def get_args():
 def cli_run(fix_metadata: MetadataFixer, whitelist: List[str]):
     args = get_args()
 
-    if whitelist == []:
+    if not whitelist:
         whitelist = _configure_whitelist()
 
     network = _get_lastfm_network()
